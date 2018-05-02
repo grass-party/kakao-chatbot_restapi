@@ -17,10 +17,10 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var aKey Keyboard
 	aKey.Type = "buttons"
 	aKey.Buttons = make([]string, 4)
-	aKey.Buttons[0] = "????1"
-	aKey.Buttons[1] = "????2"
-	aKey.Buttons[2] = "????3"
-	aKey.Buttons[3] = "????4"
+	aKey.Buttons[0] = "선택1"
+	aKey.Buttons[1] = "선택2"
+	aKey.Buttons[2] = "선택3"
+	aKey.Buttons[3] = "선택4"
 
 	jData, err := json.Marshal(aKey)
 	if err != nil {
