@@ -30,16 +30,23 @@ type sMessage_Button struct {
 	URL   string `json:"url"`
 }
 
+type sKeyboard struct {
+	Type    string   `json:"type"`
+	Buttons []string `json:"buttons"`
+}
+
+/*
 type sMessage struct {
 	Text           string          `json:"text"`
 	Photo          sPhoto          `json:"photo"`
 	Message_Button sMessage_Button `json:"message_button"`
 }
 
-type sKeyboard struct {
-	Type    string   `json:"type"`
-	Buttons []string `json:"buttons"`
+type s2Kakao struct {
+	Message  sMessage  `json:"message"`
+	Keyboard sKeyboard `json:"keyboard"`
 }
+*/
 
 func UIKeyboard(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var aKey sKeyboard
@@ -73,13 +80,22 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 	fmt.Println(msg)
 
-	var aMessage sMessage
-	aMessage.Text = msg.Content + "을 선택하셨습니다."
-	aMessage.Photo.URL = "http://img-cdn.ddanzi.com/files/attach/images/4258226/719/796/510/753f8d9231ccd2535584c4a4905fac50.JPG"
-	aMessage.Photo.Width = 640
-	aMessage.Photo.Height = 480
-	aMessage.Message_Button.Label = "다음 연결"
-	aMessage.Message_Button.URL = "http://daum.net"
+	var aText string
+	aText = msg.Content + "을 선택하셨습니다."
+	var aPhoto sPhoto
+	aPhoto.URL = "http://img-cdn.ddanzi.com/files/attach/images/4258226/719/796/510/753f8d9231ccd2535584c4a4905fac50.JPG"
+	aPhoto.Width = 640
+	aPhoto.Height = 480
+	var aMessage_Button sMessage_Button
+	aMessage_Button.Label = "다음 연결"
+	aMessage_Button.URL = "http://daum.net"
+
+	type sMessage struct {
+		Text           string          `json:"text"`
+		Photo          sPhoto          `json:"photo"`
+		Message_Button sMessage_Button `json:"message_button"`
+	}
+	aMessage := sMessage{Text: aText, Photo: aPhoto, Message_Button: aMessage_Button}
 
 	var aKeyboard sKeyboard
 	aKeyboard.Type = "buttons"
@@ -92,9 +108,10 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		Message  sMessage  `json:"message"`
 		Keyboard sKeyboard `json:"keyboard"`
 	}{
-		Message:  aMessage,
-		Keyboard: aKeyboard,
+		aMessage,
+		aKeyboard,
 	}
+
 	fmt.Println(ReturnMessage)
 
 	jData, err := json.Marshal(ReturnMessage)
