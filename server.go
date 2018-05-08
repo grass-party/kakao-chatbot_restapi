@@ -4,10 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
+
+const mongoURI = "mongodb://localhost:27017/firebug"
+
+type Poll struct {
+	ID      bson.ObjectId `bson:"_id"`
+	Img     string        `bson:"img"`
+	Article string        `bson:"article"`
+	Link    string        `bson:"link"`
+}
 
 type sUserMessage struct {
 	User_key string `json:"user_key"`
@@ -80,22 +91,42 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 	fmt.Println(msg)
 
+	session, err := mgo.Dial(mongoURI)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer session.Close()
+
+	collection := session.DB("").C("poll")
+
+	aPoll := new(Poll)
+
+	collection.Find(nil).One(&aPoll)
+
 	var aText string
-	aText = msg.Content + "을 선택하셨습니다."
+	aText = msg.Content + "선택 : " + aPoll.Article
 	var aPhoto sPhoto
-	aPhoto.URL = "http://img-cdn.ddanzi.com/files/attach/images/4258226/719/796/510/753f8d9231ccd2535584c4a4905fac50.JPG"
+	aPhoto.URL = aPoll.Img
 	aPhoto.Width = 640
 	aPhoto.Height = 480
 	var aMessage_Button sMessage_Button
-	aMessage_Button.Label = "카카오링크테스트"
-	aMessage_Button.URL = "http://49.236.137.51:5000/kakaolink.html"
+	aMessage_Button.Label = "고양고양"
+	//	aMessage_Button.URL = "http://49.236.137.51:5000/kakaolink.html"
+	aMessage_Button.URL = aPoll.Link
+
+	fmt.Println(aPoll)
+
+	//	var bMessage_Button sMessage_Button
+	//	bMessage_Button.Label = "투표"
+	//	bMessage_Button.URL = aPoll.Link
 
 	type sMessage struct {
 		Text           string          `json:"text"`
 		Photo          sPhoto          `json:"photo"`
 		Message_Button sMessage_Button `json:"message_button"`
+		//		Message_Button2 sMessage_Button `json:"message_button"`
 	}
-	aMessage := sMessage{Text: aText, Photo: aPhoto, Message_Button: aMessage_Button}
+	aMessage := sMessage{Text: aText, Photo: aPhoto, Message_Button: aMessage_Button} //, Message_Button2: aMessage_Button}
 
 	var aKeyboard sKeyboard
 	aKeyboard.Type = "buttons"
