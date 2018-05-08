@@ -52,10 +52,10 @@ func UIKeyboard(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var aKey sKeyboard
 	aKey.Type = "buttons"
 	aKey.Buttons = make([]string, 4)
-	aKey.Buttons[0] = "선택1"
-	aKey.Buttons[1] = "선택2"
-	aKey.Buttons[2] = "선택3"
-	aKey.Buttons[3] = "선택4"
+	aKey.Buttons[0] = "초기키보드1"
+	aKey.Buttons[1] = "초기키보드2"
+	aKey.Buttons[2] = "초기키보드3"
+	aKey.Buttons[3] = "초기키보드4"
 
 	jData, err := json.Marshal(aKey)
 	if err != nil {
@@ -87,8 +87,8 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	aPhoto.Width = 640
 	aPhoto.Height = 480
 	var aMessage_Button sMessage_Button
-	aMessage_Button.Label = "다음 연결"
-	aMessage_Button.URL = "http://daum.net"
+	aMessage_Button.Label = "카카오링크테스트"
+	aMessage_Button.URL = "http://49.236.137.51:5000/kakaolink.html"
 
 	type sMessage struct {
 		Text           string          `json:"text"`
