@@ -6,18 +6,39 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
-const mongoURI = "mongodb://localhost:27017/firebug"
+const mongoURI = "mongodb://localhost:27017/firefly"
 
 type Poll struct {
-	ID      bson.ObjectId `bson:"_id"`
-	Img     string        `bson:"img"`
-	Article string        `bson:"article"`
-	Link    string        `bson:"link"`
+	ID        bson.ObjectId `bson:"_id"`
+	TimeStamp time.Time     `bson:"timestamp"`
+	LimitTime int           `bson:"limittime"`
+
+	Title       string       `bson:"title"`
+	Description string       `bson:"description"`
+	Msg4Vote    string       `bson:"msg4vote"`
+	Msg4Shr     string       `bson:"msg4shr"`
+	ImgUrl      template.URL `bson:"imgurl"`
+	Link        template.URL `bson:"link"`
+
+	ViewCnt int `bson:"viewcnt"`
+	LikeCnt int `bson:"likecnt"`
+	CmtCnt  int `bson:"cmtcnt"`
+	ShrCnt  int `bson:"shrcnt"`
+
+	BtnTitle string       `bson:"btntitle"`
+	BtnUrl   template.URL `bson:"btnurl"`
+
+	ReactTitles []string       `bson:"reacttitles"`
+	ReactUsers  map[string]int `bson:"reactusers"`
+	ReactCnt    []int          `bson:"reactcnt"`
 }
 
 type sUserMessage struct {
@@ -59,14 +80,16 @@ type s2Kakao struct {
 }
 */
 
+var DefaultMessage = "반갑습니다. 버튼을 눌러주세요."
+var ShareMessage = "공유해서 의견 모으기"
+var ShowOriginMessage = "원문 보기"
+
 func UIKeyboard(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 	var aKey sKeyboard
 	aKey.Type = "buttons"
-	aKey.Buttons = make([]string, 4)
-	aKey.Buttons[0] = "초기키보드1"
-	aKey.Buttons[1] = "초기키보드2"
-	aKey.Buttons[2] = "초기키보드3"
-	aKey.Buttons[3] = "초기키보드4"
+	aKey.Buttons = make([]string, 1)
+	aKey.Buttons[0] = DefaultMessage
 
 	jData, err := json.Marshal(aKey)
 	if err != nil {
@@ -83,6 +106,7 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+
 	var msg sUserMessage
 	err = json.Unmarshal(Body, &msg)
 	if err != nil {
@@ -99,41 +123,90 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	collection := session.DB("").C("poll")
 
-	aPoll := new(Poll)
-
-	collection.Find(nil).One(&aPoll)
+	var aPoll Poll
+	collection.Find(nil).Sort("-timestamp").One(&aPoll)
 
 	var aText string
-	aText = msg.Content + "선택 : " + aPoll.Article
+	var aKeyboard sKeyboard
+	aKeyboard.Type = "buttons"
+
 	var aPhoto sPhoto
-	aPhoto.URL = aPoll.Img
+	aPhoto.URL = string(aPoll.ImgUrl)
 	aPhoto.Width = 640
 	aPhoto.Height = 480
 	var aMessage_Button sMessage_Button
-	aMessage_Button.Label = "고양고양"
-	//	aMessage_Button.URL = "http://49.236.137.51:5000/kakaolink.html"
-	aMessage_Button.URL = aPoll.Link
+	aMessage_Button.Label = aPoll.BtnTitle
+	aMessage_Button.URL = string(aPoll.BtnUrl)
 
+	ReactSize := len(aPoll.ReactTitles)
+
+	var VoteResult string
+	for i := 0; i < ReactSize; i++ {
+		VoteResult = VoteResult + aPoll.ReactTitles[i] + " : " + strconv.Itoa(aPoll.ReactCnt[i]) + "\n"
+	}
+
+	fmt.Println(msg)
 	fmt.Println(aPoll)
 
-	//	var bMessage_Button sMessage_Button
-	//	bMessage_Button.Label = "투표"
-	//	bMessage_Button.URL = aPoll.Link
+	VoteNum, exists := aPoll.ReactUsers[msg.User_key]
+
+	if exists { // 투표했을때
+		if msg.Content == DefaultMessage {
+			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + " 라고 하셨습니다.\n\n" + VoteResult
+			aKeyboard.Buttons = make([]string, 2)
+			aKeyboard.Buttons[0] = ShareMessage
+			aKeyboard.Buttons[1] = ShowOriginMessage
+		} else if msg.Content == ShowOriginMessage {
+			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + "라고 하셨습니다.\n\n" + VoteResult
+			aKeyboard.Buttons = make([]string, 2)
+			aKeyboard.Buttons[0] = ShareMessage
+			aKeyboard.Buttons[1] = ShowOriginMessage
+		} else if msg.Content == ShareMessage { // 공유하기 버튼
+			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + "라고 하셨습니다.\n\n" + VoteResult
+			aKeyboard.Buttons = make([]string, 2)
+			aKeyboard.Buttons[0] = ShareMessage
+			aKeyboard.Buttons[1] = ShowOriginMessage
+
+			aMessage_Button.Label = "공유하기"
+			aMessage_Button.URL = "http://49.236.137.51:5000/kakaolink"
+		}
+	} else { // 투표 안했을 때
+		if msg.Content == DefaultMessage || msg.Content == ShowOriginMessage || msg.Content == ShareMessage {
+			// 투표액션 없을때 = 투표준비
+			aKeyboard.Buttons = make([]string, ReactSize)
+			for i := 0; i < ReactSize; i++ {
+				aKeyboard.Buttons[i] = aPoll.ReactTitles[i]
+			}
+		} else {
+			// 투표 액션
+			for i := 0; i < ReactSize; i++ {
+				if msg.Content == aPoll.ReactTitles[i] {
+					aText = "감사합니다. 당신은 " + aPoll.ReactTitles[i] + "라고 하셨습니다.\n\n" + VoteResult
+					aKeyboard.Buttons = make([]string, 2)
+					aKeyboard.Buttons[0] = ShareMessage
+					aKeyboard.Buttons[1] = ShowOriginMessage
+
+					aPoll.ReactUsers[msg.User_key] = i
+					aPoll.ReactCnt[i] += 1
+					collection.UpdateId(aPoll.ID, aPoll)
+				}
+			}
+		}
+	}
+
+	if msg.Content == ShareMessage || msg.Content == ShowOriginMessage {
+		aText = aText + aPoll.Title + "\n\n" + aPoll.Description + "\n" + aPoll.Msg4Shr + "\n"
+	} else {
+		aText = aText + aPoll.Title + "\n\n" + aPoll.Description + "\n" + aPoll.Msg4Vote + "\n"
+	}
+	fmt.Println(aPoll)
 
 	type sMessage struct {
-		Text           string          `json:"text"`
 		Photo          sPhoto          `json:"photo"`
+		Text           string          `json:"text"`
 		Message_Button sMessage_Button `json:"message_button"`
-		//		Message_Button2 sMessage_Button `json:"message_button"`
 	}
-	aMessage := sMessage{Text: aText, Photo: aPhoto, Message_Button: aMessage_Button} //, Message_Button2: aMessage_Button}
-
-	var aKeyboard sKeyboard
-	aKeyboard.Type = "buttons"
-	aKeyboard.Buttons = make([]string, 3)
-	aKeyboard.Buttons[0] = "선택1"
-	aKeyboard.Buttons[1] = "선택2"
-	aKeyboard.Buttons[2] = "선택3"
+	aMessage := sMessage{Text: aText, Photo: aPhoto, Message_Button: aMessage_Button}
 
 	ReturnMessage := struct {
 		Message  sMessage  `json:"message"`
@@ -152,6 +225,7 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jData)
+
 }
 
 func UIAddFriend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {

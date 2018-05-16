@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width"/>
+<title>KakaoLink v2 Demo(Default / Feed) - Kakao JavaScript SDK</title>
+<script src="//developers.kakao.com/sdk/js/kakao.min.js"></script>
+<script src="./jquery-3.3.1.min.js"></script>
+<script type='text/javascript'>
+
+
+    Kakao.init('f537cca02bdb2ce5a9e405e46c34d89a');
+
+    function sendLink(imgurlval, linkval, btnurl1val, btnurl2val) {
+      Kakao.Link.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '여야 \x27추경 처리 시점\x27 놓고 합의 하루 만에 충돌',
+          description: '여야가 ‘드루킹 특검법안과 추가경정예산안을 18일에 함께 처리하자’는 합의안을 내놓은 지 하루 만인 15일 부딪쳤다. 추경예산안의 처리시점을 놓고, ‘시간이 촉박하다’는 의견이 야당에서 제기됐다. 드루킹 특검은 수사 범위를 놓고 여야가 제각각 해석을 내놓았다. 여야 원내수석부대표들은 이날 전날 합의안에 대한 세부사항 조율에 나섰으나 절충점을 찾지 못했다.',
+          imageUrl: imgurlval,
+          link: {
+            mobileWebUrl:linkval,
+            webUrl:linkval
+          }
+        },
+        social: {
+          likeCount:  0 ,
+          commentCount:  0 ,
+          sharedCount:  42
+        },
+        buttons: [
+          {
+            title: '원문보기',
+            link: {
+              mobileWebUrl: btnurl1val,
+              webUrl: btnurl1val
+            }
+          },
+          {
+            title: '반응하러가기',
+            link: {
+              mobileWebUrl: 'http://pf.kakao.com/_xiieJC/chat',
+              webUrl: 'http://pf.kakao.com/_xiieJC/chat'
+            }
+          }
+        ]
+      });
+    }
+
+  window.onload = function() {
+	var imgurlval = $('#imgurl').attr("src");
+	var linkval = $('#link').attr("href");
+	var btnurl1val = $('#btnurl1').attr("href");
+	var btnurl2val = $('#btnurl2').attr("href");
+
+	sendLink(imgurlval, linkval, btnurl1val, btnurl2val);
+  }
+</script>
+</head>
+
+<body>
+
+<table>
+	<tr>
+		<td><img src="https://t1.daumcdn.net/news/201805/15/khan/20180515222534028tvxq.jpg" id="imgurl"/></td>
+	</tr>
+	<tr>
+		<td><bold><h3><a href='http://v.media.daum.net/v/20180515222537613' id='link'>여야 &#39;추경 처리 시점&#39; 놓고 합의 하루 만에 충돌</a></h3></bold></td>
+	</tr>
+	<tr>
+		<td><h6 color="grey">여야가 ‘드루킹 특검법안과 추가경정예산안을 18일에 함께 처리하자’는 합의안을 내놓은 지 하루 만인 15일 부딪쳤다. 추경예산안의 처리시점을 놓고, ‘시간이 촉박하다’는 의견이 야당에서 제기됐다. 드루킹 특검은 수사 범위를 놓고 여야가 제각각 해석을 내놓았다. 여야 원내수석부대표들은 이날 전날 합의안에 대한 세부사항 조율에 나섰으나 절충점을 찾지 못했다.</h6></td>
+	</tr>
+	<tr>
+		<td>Share Count : 42<br/>Like Count : 0<br/>Comment Count : 0
+		</td>
+	</tr>
+	<tr>
+		<td><a href='http://v.media.daum.net/v/20180515222537613' id='btnurl1'>원문보기</a><a href='http://49.236.137.51:5000/kakaolink' id='btnurl2'>공유하기</a></td>
+	</tr>
+</table>
+</body>
+</html>

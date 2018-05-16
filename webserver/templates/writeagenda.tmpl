@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+<meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width"/>
+<title>Make Agenda</title>
+<script src="./scrypt.js" type="text/javascript"></script>
+<script src="./buffer.js" type="text/javascript"></script>
+<script src="./setImmediate.js" type="text/javascript"></script>
+<script src="./unorm.js" type="text/javascript"></script>
+<script src="./jquery-3.3.1.min.js" type="text/javascript"></script>
+<script>
+$(document).ready(function(){
+    $('#sbmt').click(function(){
+        var pwd = $('#pwd')[0].value;
+        var password = new buffer.SlowBuffer(pwd.normalize('NFKC'));
+        var salt = new buffer.SlowBuffer("firebugsalt".normalize('NFKC'));
+
+        var N = 1024, r = 8, p = 1;
+        var dkLen = 32;
+
+        scrypt(password, salt, N, r, p, dkLen, function(error, progress, key) {
+            if (error) {
+                console.log("Error: " + error);
+            } else if (key) {
+                console.log("Found: " + key);
+                $("#pwd")[0].value = key;
+                $('#makeagenda')[0].submit();
+            }
+        });
+    });
+});
+</script>
+</head>
+<body>
+<form id='makeagenda' action="/makeagenda" method="post">
+<table style="height: 194px;" width="243">
+<tbody>
+<tr>
+<td style="width: 113px;">title</td>
+<td style="width: 114px;"><input name="title" type="text" /></td>
+</tr>
+<tr>
+<td style="width: 113px;">description</td>
+<td style="width: 114px;"><textarea name="description" rows="30" cols="100"></textarea></td>
+</tr>
+<tr>
+<td style="width: 113px;">msg4vote</td>
+<td style="width: 114px;"><textarea name="msg4vote" rows="3" cols="100"></textarea></td>
+</tr>
+<tr>
+<td style="width: 113px;">msg4shr</td>
+<td style="width: 114px;"><textarea name="msg4shr" rows="3" cols="100"></textarea></td>
+</tr>
+<tr>
+<td style="width: 113px;">imgurl</td>
+<td style="width: 114px;"><input name="imgurl" type="text" /></td>
+</tr>
+<tr>
+<td style="width: 113px;">link</td>
+<td style="width: 114px;"><input name="link" type="text" /></td>
+</tr>
+<tr>
+<td style="width: 113px;">btntitle</td>
+<td style="width: 114px;"><input name="btntitle" type="text" value="원문보기"/></td>
+</tr>
+<tr>
+<td style="width: 113px;">btnurl</td>
+<td style="width: 114px;"><input name="btnurl" type="text" /></td>
+</tr>
+<tr>
+<td style="width: 113px;">reacttitles (,로 구분하여 입력하세요)</td>
+<td style="width: 114px;"><input name="reacttitles" type="text" /></td>
+</tr>
+<tr>
+<td style="width: 113px;">endhourfromnow</td>
+<td style="width: 114px;"><input name="endhourfromnow" type="text" /></td>
+</tr>
+<tr>
+<td style="width: 113px;">password</td>
+<td style="width: 114px;"><input id="pwd" name="password" type="password" /></td>
+</tr>
+</tbody>
+</table>
+<input type="button" id="sbmt" value="Submit" /></form>
+</body>
+</html>
