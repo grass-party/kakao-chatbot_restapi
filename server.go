@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/julienschmidt/httprouter"
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"html/template"
@@ -84,7 +85,7 @@ var DefaultMessage = "반갑습니다. 버튼을 눌러주세요."
 var ShareMessage = "공유해서 의견 모으기"
 var ShowOriginMessage = "원문 보기"
 
-func UIKeyboard(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func UIKeyboard(w http.ResponseWriter, r *http.Request) {
 
 	var aKey sKeyboard
 	aKey.Type = "buttons"
@@ -99,7 +100,7 @@ func UIKeyboard(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Write(jData)
 }
 
-func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func UIMessage(w http.ResponseWriter, r *http.Request) {
 	Body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -228,7 +229,7 @@ func UIMessage(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 }
 
-func UIAddFriend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func UIAddFriend(w http.ResponseWriter, r *http.Request) {
 	// DB에 넣기
 	/*
 		ReturnMessage := struct {
@@ -251,7 +252,7 @@ func UIAddFriend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	fmt.Fprint(w, "add friend")
 }
 
-func UIDeleteFriend(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func UIDeleteFriend(w http.ResponseWriter, r *http.Request) {
 	// DB에서 지우기
 	/*
 		jData, err := json.Marshal(aKey)
@@ -264,7 +265,7 @@ func UIDeleteFriend(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	fmt.Fprint(w, "delete friend")
 }
 
-func UIDeleteChatRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func UIDeleteChatRoom(w http.ResponseWriter, r *http.Request) {
 	// DB에서 지우기
 	/*
 		jData, err := json.Marshal(aKey)
@@ -278,14 +279,18 @@ func UIDeleteChatRoom(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 }
 
 func main() {
-	router := httprouter.New()
-	router.GET("/keyboard", UIKeyboard)
-	router.POST("/message", UIMessage)
+	mux := mux.NewRouter()
+	mux.HandleFunc("/keyboard", UIKeyboard).Methods("GET")
+	mux.HandleFunc("/message", UIMessage).Methods("POST")
 
-	router.POST("/friend", UIAddFriend)
-	router.DELETE("/friend", UIDeleteFriend)
+	mux.HandleFunc("/friend", UIAddFriend).Methods("POST")
+	mux.HandleFunc("/friend", UIDeleteFriend).Methods("DELETE")
 
-	router.DELETE("/chat_room/:user_key", UIDeleteChatRoom)
+	mux.HandleFunc("/chat_room/:user_key", UIDeleteChatRoom).Methods("DELETE")
 
-	log.Fatal(http.ListenAndServe(":3000", router))
+	n := negroni.Classic()
+
+	n.UseHandler(mux)
+
+	n.Run(":3000")
 }
