@@ -10,6 +10,7 @@
 <script src="./js/setImmediate.js" type="text/javascript"></script>
 <script src="./js/unorm.js" type="text/javascript"></script>
 <script src="./js/jquery-3.3.1.min.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.css">
 <script>
 $(document).ready(function(){
     $('#sbmt').click(function(){
@@ -34,8 +35,59 @@ $(document).ready(function(){
 </script>
 </head>
 <body>
-<form id='makeagenda' action="/makeagenda" method="post">
-<table style="height: 194px;" width="243">
+<div class="container">
+	<form role="form" id='makeagenda' action="/makeagenda" method="post" class="form-horizontal">
+		<div class="form-group">
+			<h2>Poll 만들기</h2>
+		</div>
+		<div class="form-group">
+			<label for="titleid">Title</label>
+			<input name="title" type="text" id="titleid" class="form-control" />
+			<label for="descriptionid">Description</label>
+			<textarea name="description" id="descriptionid" class="form-control" rows="15"></textarea>
+		</div>
+		<div class="form-group">
+			<label for="msg4voteid">Msg4Vote</label>
+			<textarea name="msg4vote" id="msg4voteid" class="form-control" rows="2"></textarea>
+		</div>
+		<div class="form-group">
+			<label for="msg4shrid">Msg4Shr</label>
+			<textarea name="msg4shr" id="msg4shrid" class="form-control" rows="2"></textarea>
+		</div>
+		<div class="form-group">
+			<label for="imgurlid">ImgUrl</label>
+			<input name="imgurl" type="text" id="imgurlid" class="form-control" />
+		</div>
+		<div class="form-group">
+			<label for="linkid">Link</label>
+			<input name="link" type="text" id="linkid" class="form-control" />
+		</div>
+		<div class="form-group">
+			<label for="btntitleid">BtnTitle</label>
+			<input name="btntitle" type="text" id="btntitleid" value="원문보기" class="form-control" />
+		</div>
+		<div class="form-group">
+			<label for="btnurlid">BtnUrl</label>
+			<input name="btnurl" type="text" id="btnurlid" class="form-control" />
+		</div>
+		<div class="form-group">
+			<label for="reacttitlesid">ReactTitles</label>
+			<input name="reacttitles" id="reacttitlesid" placeholder=",로 구분해서 입력하세요"type="text" class="form-control" />
+		</div>
+		<div class="form-group">
+			<label for="endhourfromnowid">EndHourFromNow</label>
+			<input name="endhourfromnow" type="text" id="endhourfromnowid" class="form-control" />
+		</div>
+		<div class="form-group">
+			<label for="pwd">Password</label>
+			<input name="password" type="password" id="pwd" class="form-control" />
+		</div>
+		<div class="form-group">
+			<button type="Submit" id="sbmt" class="btn btn-default form-control">Submit</button>
+		</div>
+	</form>
+</div>
+<!--table style="height: 194px;" width="243">
 <tbody>
 <tr>
 <td style="width: 113px;">title</td>
@@ -83,6 +135,7 @@ $(document).ready(function(){
 </tr>
 </tbody>
 </table>
-<input type="button" id="sbmt" value="Submit" /></form>
+<input type="button" id="sbmt" value="Submit" />
+</form-->
 </body>
 </html>
