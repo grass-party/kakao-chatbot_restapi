@@ -6,9 +6,7 @@ import (
 	//	"io/ioutil"
 	"html/template"
 	"log"
-	"mime"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -62,15 +60,6 @@ func init() {
 
 	// 렌더러 생성
 	renderer = render.New()
-}
-
-func FileServer(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	file := vars["filename"]
-
-	w.Header().Set("Content-Type", mime.TypeByExtension(filepath.Ext(file)))
-	http.ServeFile(w, r, "./wwwroot/"+file)
 }
 
 func IndexHandler(w http.ResponseWriter, req *http.Request) {
@@ -261,10 +250,12 @@ func main() {
 	mux.HandleFunc("/showagenda", ShowAgendaHandler).Methods("GET")
 	mux.HandleFunc("/delagenda", DelAgendaHandler).Methods("GET")
 	mux.HandleFunc("/showagendalist", ShowAgendaListHandler).Methods("GET")
-	mux.HandleFunc("/{filename}", FileServer).Methods("GET")
 
 	// negroni 미들웨어 생성
 	n := negroni.Classic()
+
+	// file serve
+	n.Use(negroni.NewStatic(http.Dir("./wwwroot")))
 
 	// negroni에 router를 핸들러로 등록
 	n.UseHandler(mux)
