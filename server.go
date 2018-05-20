@@ -19,6 +19,7 @@ const mongoURI = "mongodb://localhost:27017/firefly"
 
 type Poll struct {
 	ID        bson.ObjectId `bson:"_id"`
+	Num       uint          `bson:"num"`
 	TimeStamp time.Time     `bson:"timestamp"`
 	LimitTime int           `bson:"limittime"`
 
@@ -37,9 +38,10 @@ type Poll struct {
 	BtnTitle string       `bson:"btntitle"`
 	BtnUrl   template.URL `bson:"btnurl"`
 
-	ReactTitles []string       `bson:"reacttitles"`
-	ReactUsers  map[string]int `bson:"reactusers"`
-	ReactCnt    []int          `bson:"reactcnt"`
+	ReactTitles  []string       `bson:"reacttitles"`
+	ReactTargets []string       `bson:"reacttargets"`
+	ReactUsers   map[string]int `bson:"reactusers"`
+	ReactCnt     []int          `bson:"reactcnt"`
 }
 
 type sUserMessage struct {
@@ -81,9 +83,20 @@ type s2Kakao struct {
 }
 */
 
+func GetCurrentResult(Titles []string, Cnts []int) string {
+	Size := len(Titles)
+	var VoteResult string
+	for i := 0; i < Size; i++ {
+		VoteResult = VoteResult + Titles[i] + " : " + strconv.Itoa(Cnts[i]) + "\n"
+	}
+	VoteResult = VoteResult + "\n"
+
+	return VoteResult
+}
+
 var DefaultMessage = "반갑습니다. 버튼을 눌러주세요."
 var ShareMessage = "공유해서 의견 모으기"
-var ShowOriginMessage = "원문 보기"
+var ShowOriginMessage = "최신 안건 보기"
 
 func UIKeyboard(w http.ResponseWriter, r *http.Request) {
 
@@ -140,11 +153,7 @@ func UIMessage(w http.ResponseWriter, r *http.Request) {
 	aMessage_Button.URL = string(aPoll.BtnUrl)
 
 	ReactSize := len(aPoll.ReactTitles)
-
-	var VoteResult string
-	for i := 0; i < ReactSize; i++ {
-		VoteResult = VoteResult + aPoll.ReactTitles[i] + " : " + strconv.Itoa(aPoll.ReactCnt[i]) + "\n"
-	}
+	TargetSize := len(aPoll.ReactTargets)
 
 	fmt.Println(msg)
 	fmt.Println(aPoll)
@@ -153,17 +162,17 @@ func UIMessage(w http.ResponseWriter, r *http.Request) {
 
 	if exists { // 투표했을때
 		if msg.Content == DefaultMessage {
-			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + " 라고 하셨습니다.\n\n" + VoteResult
+			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + " 라고 하셨습니다.\n\n" + GetCurrentResult(aPoll.ReactTitles, aPoll.ReactCnt)
 			aKeyboard.Buttons = make([]string, 2)
 			aKeyboard.Buttons[0] = ShareMessage
 			aKeyboard.Buttons[1] = ShowOriginMessage
 		} else if msg.Content == ShowOriginMessage {
-			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + "라고 하셨습니다.\n\n" + VoteResult
+			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + "라고 하셨습니다.\n\n" + GetCurrentResult(aPoll.ReactTitles, aPoll.ReactCnt)
 			aKeyboard.Buttons = make([]string, 2)
 			aKeyboard.Buttons[0] = ShareMessage
 			aKeyboard.Buttons[1] = ShowOriginMessage
 		} else if msg.Content == ShareMessage { // 공유하기 버튼
-			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + "라고 하셨습니다.\n\n" + VoteResult
+			aText = "당신은 " + aPoll.ReactTitles[VoteNum] + "라고 하셨습니다.\n\n" + GetCurrentResult(aPoll.ReactTitles, aPoll.ReactCnt)
 			aKeyboard.Buttons = make([]string, 2)
 			aKeyboard.Buttons[0] = ShareMessage
 			aKeyboard.Buttons[1] = ShowOriginMessage
@@ -182,23 +191,31 @@ func UIMessage(w http.ResponseWriter, r *http.Request) {
 			// 투표 액션
 			for i := 0; i < ReactSize; i++ {
 				if msg.Content == aPoll.ReactTitles[i] {
-					aText = "감사합니다. 당신은 " + aPoll.ReactTitles[i] + "라고 하셨습니다.\n\n" + VoteResult
+					var TargetStr string
+					for j := 0; j < TargetSize; j++ {
+						TargetStr = TargetStr + aPoll.ReactTargets[j]
+						if j+1 < TargetSize {
+							TargetStr = TargetStr + ","
+						}
+					}
+					aPoll.ReactUsers[msg.User_key] = i
+					aPoll.ReactCnt[i] += 1
+					collection.UpdateId(aPoll.ID, aPoll)
+
+					aText = "감사합니다.\n당신은 " + aPoll.ReactTitles[i] + "에 투표 하셨습니다.\n\n당신의 의견을" + TargetStr + "에게 전달하겠습니다.\n\n" + GetCurrentResult(aPoll.ReactTitles, aPoll.ReactCnt)
 					aKeyboard.Buttons = make([]string, 2)
 					aKeyboard.Buttons[0] = ShareMessage
 					aKeyboard.Buttons[1] = ShowOriginMessage
 
-					aPoll.ReactUsers[msg.User_key] = i
-					aPoll.ReactCnt[i] += 1
-					collection.UpdateId(aPoll.ID, aPoll)
 				}
 			}
 		}
 	}
 
 	if msg.Content == ShareMessage || msg.Content == ShowOriginMessage {
-		aText = aText + aPoll.Title + "\n\n" + aPoll.Description + "\n" + aPoll.Msg4Shr + "\n"
+		aText = aText + aPoll.Title + "\n\n" + aPoll.Description + "\n\n" + aPoll.Msg4Shr + "\n"
 	} else {
-		aText = aText + aPoll.Title + "\n\n" + aPoll.Description + "\n" + aPoll.Msg4Vote + "\n"
+		aText = aText + aPoll.Title + "\n\n" + aPoll.Description + "\n\n" + aPoll.Msg4Vote + "\n"
 	}
 	fmt.Println(aPoll)
 

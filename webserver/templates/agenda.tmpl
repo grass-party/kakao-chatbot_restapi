@@ -18,6 +18,7 @@
 </head>
 <body style="background-color:#9bbbd4;">
 <table width="400" class="kakaostyle">
+<tbody>
 	<tr>
 		<td><img src="{{.ImgUrl|html}}" /></td>
 	</tr>
@@ -40,14 +41,10 @@
 		<td><a href="{{.BtnUrl|html}}" class='content'>{{.BtnTitle}}</a></td>
 	</tr>
 	<tr>
-		<td>{{.ReactTitles}}</td>
+		<td>{{range $aTitle := .ReactTitles}}{{.}},{{end}}</td>
 	</tr>
 	<tr>
-		<td class="text-align:center;">
-			<form action="/showagendalist">
-				<input type="submit" value="List로">
-			</form>
-		</td>
+		<td>{{range $Target := .ReactTargets}}{{.}},{{end}}</td>
 	</tr>
 	<tr>
 		<td class="text-align:center;">
@@ -58,6 +55,15 @@
 			</form>
 		</td>
 	</tr>
+</tbody>
+<tfoot>
+	<tr>
+		<td>
+			<button type="button" onclick="location.href='/showagendalist'">List로</button>
+			<button type="button" onclick="location.href='/kakaolink'">카카오 공유하기</button>
+		</td>
+	</tr>
+</tfoot>
 </table>
 </body>
 </html>

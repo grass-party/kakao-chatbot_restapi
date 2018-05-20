@@ -75,6 +75,10 @@ $(document).ready(function(){
 			<input name="reacttitles" id="reacttitlesid" placeholder=",로 구분해서 입력하세요"type="text" class="form-control" />
 		</div>
 		<div class="form-group">
+			<label for="reacttargetsid">ReactTargets</label>
+			<input name="reacttargets" id="reacttargetsid" placeholder=",로 구분해서 입력하세요"type="text" class="form-control" />
+		</div>
+		<div class="form-group">
 			<label for="endhourfromnowid">EndHourFromNow</label>
 			<input name="endhourfromnow" type="text" id="endhourfromnowid" class="form-control" />
 		</div>
@@ -87,6 +91,18 @@ $(document).ready(function(){
 		</div>
 	</form>
 </div>
+<table>
+<tfoot>
+	<tr>
+		<td>
+			<button type="button" onclick="location.href='/showagendalist'">List로</button>
+		</td>
+		<td>
+			<button type="button" onclick="location.href='/kakaolink'">카카오 공유하기</button>
+		</td>
+	</tr>
+</tfoot>
+</table>
 <!--table style="height: 194px;" width="243">
 <tbody>
 <tr>

@@ -77,6 +77,7 @@
 	<img src="//developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png"/>
 </a-->
 <table width="400" class="kakaostyle">
+<tbody>
 	<tr>
 		<td><img src="{{.ImgUrl|html}}" id="imgurl"/></td>
 	</tr>
@@ -96,6 +97,12 @@
 		<td>Share : {{.ShrCnt}}<br /></td>
 	</tr>
 	<tr>
+		<td>{{range $aTitle := .ReactTitles}}{{.}},{{end}}</td>
+	</tr>
+	<tr>
+		<td>{{range $aTarget := .ReactTargets}}{{.}},{{end}}</td>
+	</tr>
+	<tr>
 		<td>
 			<table class="link">
 				<tr>
@@ -109,6 +116,15 @@
 			</table>
 		</td>
 	</tr>
+</tbody>
+<tfoot>
+	<tr>
+		<td>
+			<button type="button" onclick="location.href='/showagendalist'">List로</button>
+			<button type="button" onclick="location.href='/kakaolink'">카카오 공유하기</button>
+		</td>
+	</tr>
+</tfoot>
 </table>
 </body>
 </html>

@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="/css/bootstrap.css">
 </head>
 <body>
+{{$Datas := .Datas}}
+{{$Pages := .Pages}}
 <table class="table table-striped table-hover">
 	<thead>
 		<tr>
@@ -15,20 +17,31 @@
 			<th>제목</th>
 			<th>공유</th>
 			<th>조회</th>
+			<th>대상</th>
 			<th>날짜</th>
 		</tr>
 	</thead>
 	<tbody>
-		{{range .}}
+		{{range $Data := $Datas}}
 		<tr>
-			<td>Num</td>
+			<td>{{.Num}}</td>
 			<td><bold><h4><a href="/showagenda?id={{.ID.Hex}}">{{.Title}}</a></h4></bold></td>
-			<td>{{.ShrCnt}}</td>
-			<td>{{.ViewCnt}}</td>
-			<td>{{.TimeStamp}}</td>
+			<td>{{$Data.ShrCnt}}</td>
+			<td>{{$Data.ViewCnt}}</td>
+			<td>{{range $Targets := $Data.ReactTargets}}{{.}},{{end}}</td>
+			<td>{{$Data.TimeStamp}}</td>
 		</tr>
 		{{end}}
 	</tbody>
+	<tfoot>
+		<tr>
+			<td>
+				{{range $Page := $Pages}}
+				<a href="/showagendalist?page={{.}}">{{.}}</a>
+				{{end}}
+			</td>
+		</tr>
+	</tfoot>
 </table>
 <div>
 	<form action="/writeagenda">

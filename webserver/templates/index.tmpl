@@ -20,38 +20,54 @@
 </head>
 <body style="background-color:#9bbbd4;">
 <table width="400" class="kakaostyle">
-    <tr>
-        <td><img src="{{.ImgUrl|html}}" id="imgurl"/></td>
-    </tr>
-    <tr>
-                <td><bold><h3><a href='{{.Link|html}}' id='link' class='content'>{{.Title}}</a></h3></bold></td>
-            </tr>
-            <tr>
-                <td><h4 color="#696969">{{.Description}}</h4></td>
-            </tr>
-            <tr>
-                <td><h4 color="#696969">{{.Msg4Vote}}</h4></td>
-            </tr>
-            <tr>
-                <td><h4 color="#696969">{{.Msg4Shr}}</h4></td>
-    </tr>
-    <tr>
-        <td>Share : {{.ShrCnt}}<br /></td>
-    </tr>
-    <tr>
-        <td>
-            <table class="link">
-                <tr>
-                    <td class="link">
-                        <a href='{{.BtnUrl|html}}' id='btnurl' class='link'><h4 color="#00FFFF">{{.BtnTitle}}</h4></a>
-                    </td>
-                    <td class="link">
-                        <a href='http://49.236.137.51:5000/kakaolink' id='shrurl' class='link'><h4 color="#00FFFF">공유하기</h4></a>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
+	<tbody>
+		<tr>
+			<td><img src="{{.ImgUrl|html}}" id="imgurl"/></td>
+		</tr>
+		<tr>
+			<td><bold><h3><a href='{{.Link|html}}' id='link' class='content'>{{.Title}}</a></h3></bold></td>
+		</tr>
+		<tr>
+			<td><h4 color="#696969">{{.Description}}</h4></td>
+		</tr>
+		<tr>
+			<td><h4 color="#696969">{{.Msg4Vote}}</h4></td>
+		</tr>
+		<tr>
+			<td><h4 color="#696969">{{.Msg4Shr}}</h4></td>
+	    </tr>
+		<tr>
+			<td><h4 color="#696969">{{range $aTitle := .ReactTitles}}{{.}},{{end}}</h4></td>
+	    </tr>
+		<tr>
+			<td><h4 color="#696969">{{range $aTarget := .ReactTargets}}{{.}},{{end}}</h4></td>
+	    </tr>
+		<tr>
+			<td>Share : {{.ShrCnt}}<br /></td>
+		</tr>
+		<tr>
+			<td>
+				<table class="link">
+					<tr>
+						<td class="link">
+							<a href='{{.BtnUrl|html}}' id='btnurl' class='link'><h4 color="#00FFFF">{{.BtnTitle}}</h4></a>
+						</td>
+						<td class="link">
+							<a href='http://49.236.137.51:5000/kakaolink' id='shrurl' class='link'><h4 color="#00FFFF">공유하기</h4></a>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td>
+				<button type="button" onclick="location.href='/showagendalist'">List로</button>
+				<button type="button" onclick="location.href='/kakaolink'">카카오 공유하기</button>
+			</td>
+		</tr>
+	</tfoot>
 </table>
 </body>
 </html>

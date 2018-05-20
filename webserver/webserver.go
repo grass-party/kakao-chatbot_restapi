@@ -26,6 +26,7 @@ var session *mgo.Session
 
 type Poll struct {
 	ID        bson.ObjectId `bson:"_id"`
+	Num       uint          `bson:"num"`
 	TimeStamp time.Time     `bson:"timestamp"`
 	LimitTime int           `bson:"limittime"`
 
@@ -44,9 +45,10 @@ type Poll struct {
 	BtnTitle string       `bson:"btntitle"`
 	BtnUrl   template.URL `bson:"btnurl"`
 
-	ReactTitles []string       `bson:"reacttitles"`
-	ReactUsers  map[string]int `bson:"reactusers"`
-	ReactCnt    []int          `bson:"reactcnt"`
+	ReactTitles  []string       `bson:"reacttitles"`
+	ReactTargets []string       `bson:"reacttargets"`
+	ReactUsers   map[string]int `bson:"reactusers"`
+	ReactCnt     []int          `bson:"reactcnt"`
 }
 
 func init() {
@@ -126,10 +128,6 @@ func MakeAgendaHandler(w http.ResponseWriter, req *http.Request) {
 
 	req.ParseForm()
 
-	//	for key, value := range req.Form {
-	//		fmt.Printf("%s = %s\n", key, value)
-	//	}
-
 	aPoll.ID = bson.NewObjectId()
 	aPoll.TimeStamp = time.Now()
 	aPoll.LimitTime, _ = strconv.Atoi(req.Form.Get("limittime"))
@@ -154,8 +152,27 @@ func MakeAgendaHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	aPoll.ReactUsers = make(map[string]int)
 
-	//	sess := session.Copy()
-	//	defer sess.Close()
+	ReactTargets := strings.Split(req.Form.Get("reacttargets"), ",")
+	TargetSize := len(ReactTargets)
+	aPoll.ReactTargets = make([]string, TargetSize)
+	for i := 0; i < TargetSize; i++ {
+		aPoll.ReactTargets[i] = ReactTargets[i]
+	}
+
+	NumCollection := session.DB("").C("numberCnt")
+
+	type Cnt struct {
+		ID  string `bson:"_id"`
+		Seq uint   `bson:"seq"`
+	}
+	var aCnt Cnt
+	changeInDocument := mgo.Change{
+		Update:    bson.M{"$inc": bson.M{"seq": 1}},
+		ReturnNew: true,
+	}
+	NumCollection.Find(nil).Apply(changeInDocument, &aCnt)
+	aPoll.Num = aCnt.Seq
+
 	collection := session.DB("").C("poll")
 
 	collection.Insert(aPoll)
@@ -219,6 +236,7 @@ func DelAgendaHandler(w http.ResponseWriter, req *http.Request) {
 
 func ShowAgendaListHandler(w http.ResponseWriter, req *http.Request) {
 	var Polls []Poll
+	var LimitSize = 10
 
 	var err error
 	session, err = mgo.Dial(mongoURI)
@@ -229,13 +247,60 @@ func ShowAgendaListHandler(w http.ResponseWriter, req *http.Request) {
 
 	collection := session.DB("").C("poll")
 
-	err = collection.Find(nil).Sort("-timestamp").Limit(10).All(&Polls)
+	fmt.Printf("starts\n")
+
+	pagestrlist := req.URL.Query()["page"]
+
+	var Page int
+	if len(pagestrlist) == 0 {
+		Page = 1
+	} else {
+		fmt.Printf("pagestr : ")
+		fmt.Println(pagestrlist[0])
+
+		Page, err = strconv.Atoi(pagestrlist[0])
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	fmt.Printf("Page : %d\n", Page)
+
+	var SkipSize = (Page - 1) * LimitSize
+
+	var TotalCnt int
+	TotalCnt, err = collection.Count()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TotalCnt : %d\n", TotalCnt)
+
+	err = collection.Find(nil).Sort("-timestamp").Skip(SkipSize).Limit(LimitSize).All(&Polls)
 	if err != nil {
 		panic(err)
 	}
 
+	Pagination := 1 + (TotalCnt / LimitSize)
+
+	fmt.Printf("Pagination : %d\n", Pagination)
+
+	var sPages []string
+	sPages = make([]string, Pagination)
+	for i := 1; i <= Pagination; i++ {
+		sPages[i-1] = strconv.Itoa(i)
+	}
+
+	fmt.Printf("sPages : ")
+	fmt.Println(sPages)
+
 	// agenda 보여주기(뭘 기준으로?)
-	renderer.HTML(w, http.StatusOK, "agendalist", Polls)
+	renderer.HTML(w, http.StatusOK, "agendalist", struct {
+		Datas []Poll
+		Pages []string
+	}{
+		Datas: Polls,
+		Pages: sPages,
+	})
 }
 
 func main() {
